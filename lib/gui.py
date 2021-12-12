@@ -2,7 +2,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Gui(object):
     def setupUi(self, MainWindow):
-        MainWindow.setWindowIcon(QtGui.QIcon('../assets/icon.png'))
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(729, 597)
         font = QtGui.QFont()
