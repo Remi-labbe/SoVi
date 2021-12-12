@@ -47,6 +47,9 @@ class App:
         print(f"SAVE -- {path} <")
         DataLoader.save(path, self.graphe.tableFormat())
 
+    def showGraphe(self):
+        self.graphe.show()
+
     def addUser(self):
         name = self.ui.userNomField.text()
         firstName = self.ui.userPrenomField.text()
@@ -96,7 +99,7 @@ class App:
         self.ui.menuQuit.triggered.connect(self.mainWindow.close)
         self.ui.addUserButton.clicked.connect(self.addUser)
         self.ui.addPageButton.clicked.connect(self.addPage)
-        self.ui.showGraphButton.clicked.connect(self.graphe.show)
+        self.ui.showGraphButton.clicked.connect(self.showGraphe)
 
     def refresh(self):
         self.ui.nbSommetsField.setText(f"{self.graphe.getNbSommets()}")
