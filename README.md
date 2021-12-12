@@ -6,9 +6,9 @@ Utilisation:
 
 ```
 chmod +x sovi
-./sovi DATA_SET
+./sovi
 ```
 or
 ```
-python sovi DATA_SET
+python sovi
 ```
