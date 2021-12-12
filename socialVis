@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+from PyQt5 import QtWidgets
+from lib.graphe import Graphe
+from lib.gui import Gui
+
+
+class App:
+
+    def __init__(self, argv):
+        self.qapp: QtWidgets.QApplication = QtWidgets.QApplication(argv)
+        self.mainWindow: QtWidgets.QMainWindow = QtWidgets.QMainWindow()
+        self.ui: Gui = Gui()
+        self.graphe: Graphe|None = None
+
+    def setup(self) -> None:
+        self.ui.setupUi(self.mainWindow)
+        self.setupActions()
+        self.showDataInTable()
+
+    def show(self) -> None:
+        self.mainWindow.show()
+
+    def exec(self) -> None:
+        self.qapp.exec_()
+
+    """ Define all actions """
+    def openFileChoose(self) -> None:
+        """ open a filechooser to read new data """
+        print(f"OPEN -- {QtWidgets.QFileDialog.getOpenFileName()[0]} <")
+
+    def openSaveDialog(self) -> None:
+        """ open a filechooser to save data """
+        print(f"SAVE -- {QtWidgets.QFileDialog.getSaveFileName()[0]} <")
+
+    def openGraphInBrowser(self) -> None:
+        import webbrowser
+        webbrowser.open("lib/index.html")
+
+    # TABLE :   | Type | Name       | FirstName | Age
+    # Page:     | Page | Facebook   | ---       | ---
+    # User:     | User | Doe        | Jhon      | 23
+    def showDataInTable(self) -> None:
+        data = [
+            ["User", "Jhon", "Doe", 38],
+            ["Page", "FaceBook"],
+            ["User", "Jhon", "Doe", 38],
+        ]
+
+
+    def setupActions(self) -> None:
+        """ add listeners """
+        self.ui.menuOpen.triggered.connect(self.openFileChoose)
+        self.ui.menuSave.triggered.connect(self.openSaveDialog)
+        self.ui.menuQuit.triggered.connect(self.mainWindow.close)
+        self.ui.showGraphButton.clicked.connect(self.openGraphInBrowser)
+
+
+""" Entry point """
+if __name__ == "__main__":
+    import sys
+    # sys.argv >> 0: executable, arg1, arg2 ...
+    app = App(sys.argv)
+    app.setup()
+    app.show()
+    sys.exit(app.exec())
