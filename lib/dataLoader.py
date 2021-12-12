@@ -1,9 +1,9 @@
 import csv
 from dataclasses import dataclass
 
-from graphe import Graphe
-from page import Page
-from utilisateur import Utilisateur
+from lib.graphe import Graphe
+from lib.page import Page
+from lib.utilisateur import Utilisateur
 
 @dataclass(frozen=True)
 class BadDataFormatException(Exception):
@@ -34,25 +34,21 @@ class DataLoader:
 
         try:
             with open(path, mode='r') as f:
-                """
-                    use a dict with same object as key and value to
-                    make connection between nodes easy while reading the file
-                """
                 reader = csv.reader(f)
                 g = Graphe()
                 for line in reader:
                     if line == []: raise BadDataFormatException("Ligne vide")
                     leadCell = readCell(line[0])
                     g.addSommet(leadCell)
-                    print(f"[{leadCell}]")
                     # if User then it is the list of the nodes he follows
                     # if Page node then it is the list of the admins
                     for i in range(1, len(line)):
                         if line[i] == "": break
                         cell = readCell(line[i])
                         g.addSommet(cell)
-                        print(f"> {cell}")
+                        print(f"{leadCell} > {cell}")
                         g.addArc(leadCell, cell)
+                    print("----")
                 if g.getNbSommets() == 0: raise BadDataFormatException("Fichier vide")
                 return g
         except Exception as e:

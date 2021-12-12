@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtWidgets
-from lib.graphe import Graphe
+
 from lib.gui import Gui
+from lib.dataLoader import DataLoader
+from lib.graphe import Graphe
+from lib.page import Page
+from lib.utilisateur import Utilisateur
 
 
 class App:
@@ -11,7 +15,8 @@ class App:
         self.qapp: QtWidgets.QApplication = QtWidgets.QApplication(argv)
         self.mainWindow: QtWidgets.QMainWindow = QtWidgets.QMainWindow()
         self.ui: Gui = Gui()
-        self.graphe: Graphe|None = None
+        self.graphe: Graphe = Graphe()
+
 
     def setup(self) -> None:
         self.ui.setupUi(self.mainWindow)
@@ -24,18 +29,54 @@ class App:
     def exec(self) -> None:
         self.qapp.exec_()
 
-    """ Define all actions """
+
     def openFileChoose(self) -> None:
         """ open a filechooser to read new data """
-        print(f"OPEN -- {QtWidgets.QFileDialog.getOpenFileName()[0]} <")
+        path = QtWidgets.QFileDialog.getOpenFileName()[0]
+        print(f"OPEN -- {path} <")
+        g = DataLoader.load(path)
+        if g is not None:
+            self.graphe = g
+        else:
+            self.popUpError(f"Impossible de charger {path}")
+        self.refresh()
 
     def openSaveDialog(self) -> None:
         """ open a filechooser to save data """
-        print(f"SAVE -- {QtWidgets.QFileDialog.getSaveFileName()[0]} <")
+        path = QtWidgets.QFileDialog.getSaveFileName()[0]
+        print(f"SAVE -- {path} <")
+        DataLoader.save(path, self.graphe.tableFormat())
 
-    def openGraphInBrowser(self) -> None:
-        import webbrowser
-        webbrowser.open("lib/index.html")
+    def addUser(self):
+        name = self.ui.userNomField.text()
+        firstName = self.ui.userPrenomField.text()
+        age = self.ui.userAgeField.value()
+        if name == "" or firstName == "":
+            self.popUpError("Ne laissez aucun champ vide!")
+            return
+        self.graphe.addSommet(Utilisateur(name, firstName, age))
+        self.refresh()
+
+    def deleteUser(self):
+        pass
+
+    def follow(self):
+        pass
+
+    def addPage(self):
+        name = self.ui.pageNameField.text()
+        if name == "":
+            self.popUpError("Specifiez un nom!")
+            return
+        self.graphe.addSommet(Page(name))
+        self.refresh()
+
+    def deletePage(self):
+        pass
+
+    def addAdmin(self):
+        pass
+
 
     # TABLE :   | Type | Name       | FirstName | Age
     # Page:     | Page | Facebook   | ---       | ---
@@ -53,7 +94,18 @@ class App:
         self.ui.menuOpen.triggered.connect(self.openFileChoose)
         self.ui.menuSave.triggered.connect(self.openSaveDialog)
         self.ui.menuQuit.triggered.connect(self.mainWindow.close)
-        self.ui.showGraphButton.clicked.connect(self.openGraphInBrowser)
+        self.ui.addUserButton.clicked.connect(self.addUser)
+        self.ui.addPageButton.clicked.connect(self.addPage)
+        self.ui.showGraphButton.clicked.connect(self.graphe.show)
+
+    def refresh(self):
+        self.ui.nbSommetsField.setText(f"{self.graphe.getNbSommets()}")
+        self.ui.nbArcField.setText(f"{self.graphe.getNbArcs()}")
+
+    # OUTILS
+
+    def popUpError(self, msg: str = ""):
+        QtWidgets.QMessageBox.warning(self.mainWindow, "Error!", f"Error: {msg}")
 
 
 """ Entry point """

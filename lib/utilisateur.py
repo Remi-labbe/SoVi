@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from pprint import pprint
-from sommet import Sommet
+
+from lib.sommet import Sommet
 
 @dataclass(frozen=True, order=True)
 class Utilisateur(Sommet):
