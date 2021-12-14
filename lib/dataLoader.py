@@ -46,9 +46,7 @@ class DataLoader:
                         if line[i] == "": break
                         cell = readCell(line[i])
                         g.addSommet(cell)
-                        print(f"{leadCell} > {cell}")
                         g.addArc(leadCell, cell)
-                    print("----")
                 if g.getNbSommets() == 0: raise BadDataFormatException("Fichier vide")
                 return g
         except Exception as e:

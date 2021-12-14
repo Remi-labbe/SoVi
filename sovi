@@ -8,20 +8,24 @@ from lib.graphe import Graphe
 from lib.page import Page
 from lib.utilisateur import Utilisateur
 
-
 class App:
+
+    # INIT
 
     def __init__(self, argv):
         self.qapp: QtWidgets.QApplication = QtWidgets.QApplication(argv)
         self.mainWindow: QtWidgets.QMainWindow = QtWidgets.QMainWindow()
         self.ui: Gui = Gui()
         self.graphe: Graphe = Graphe()
+        self.currentUser : Utilisateur|None = None
+        self.followTarget : Utilisateur|Page|None = None
+        self.currentPage : Page|None = None
+        self.adminTarget : Utilisateur|None = None
 
 
     def setup(self) -> None:
         self.ui.setupUi(self.mainWindow)
         self.setupActions()
-        self.showDataInTable()
 
     def show(self) -> None:
         self.mainWindow.show()
@@ -29,11 +33,11 @@ class App:
     def exec(self) -> None:
         self.qapp.exec_()
 
+    # COMMANDES
 
     def openFileChoose(self) -> None:
         """ open a filechooser to read new data """
         path = QtWidgets.QFileDialog.getOpenFileName()[0]
-        print(f"OPEN -- {path} <")
         g = DataLoader.load(path)
         if g is not None:
             self.graphe = g
@@ -44,11 +48,18 @@ class App:
     def openSaveDialog(self) -> None:
         """ open a filechooser to save data """
         path = QtWidgets.QFileDialog.getSaveFileName()[0]
-        print(f"SAVE -- {path} <")
         DataLoader.save(path, self.graphe.tableFormat())
 
     def showGraphe(self):
         self.graphe.show()
+
+    ## User Panel
+
+    ### COMMANDES
+
+    def setCurrentUser(self):
+        self.currentUser = self.graphe.getAllUsers()[self.ui.userInfoSelectBox.currentIndex()]
+        self.refresh()
 
     def addUser(self):
         name = self.ui.userNomField.text()
@@ -60,11 +71,61 @@ class App:
         self.graphe.addSommet(Utilisateur(name, firstName, age))
         self.refresh()
 
+    # TODO: FIX THIS
     def deleteUser(self):
-        pass
+        self.graphe.removeSommet(self.currentUser)
+        self.currentUser = self.graphe.getAllUsers()[0]
+        self.refresh()
+
+    def setFollowTarget(self):
+        self.followTarget = self.graphe.getAllSommets()[self.ui.changeFollowComboBox.currentIndex()]
+        self.refresh()
 
     def follow(self):
-        pass
+        if self.currentUser is None or self.followTarget is None or self.currentUser == self.followTarget: return
+        self.graphe.addArc(self.currentUser, self.followTarget)
+        self.refresh()
+
+    def unfollow(self):
+        if self.currentUser is None or self.followTarget is None: return
+        self.graphe.removeArc(self.currentUser, self.followTarget)
+        self.refresh()
+
+
+    ### UPDATES
+
+    def fillUserInfos(self):
+        self.ui.userFollowListWidget.clear()
+        if self.currentUser is None: return
+        self.ui.userNameInfosField.setText(self.currentUser.name)
+        self.ui.userFirstNameInfosField.setText(self.currentUser.firstName)
+        self.ui.userAgeInfosField.setText(f"{self.currentUser.age}")
+        # fill user follows list
+        for s in self.currentUser.follows:
+            self.ui.userFollowListWidget.addItem(f"{s}")
+
+    def updateUserInfosCombocontent(self):
+        self.ui.userInfoSelectBox.clear()
+        for u in self.graphe.getAllUsers():
+            self.ui.userInfoSelectBox.addItem(f"{u.name} {u.firstName}")
+        if self.currentUser is not None:
+            self.ui.userInfoSelectBox.setCurrentText(f"{self.currentUser.name} {self.currentUser.firstName}")
+
+    def updateUserFollowComboContent(self):
+        self.ui.changeFollowComboBox.clear()
+        for u in self.graphe.getAllSommets():
+            self.ui.changeFollowComboBox.addItem(f"{u.name} {u.firstName}" if u.isUser() else f"{u.name}")
+        if self.followTarget is not None:
+            self.ui.changeFollowComboBox.setCurrentText(f"{self.followTarget.name} {self.followTarget.firstName}"
+                if self.followTarget.isUser() else f"{self.followTarget.name}")
+
+    ## Page Panel
+
+    ### COMMANDES
+
+    def setCurrentPage(self):
+        self.currentPage = self.graphe.getAllPages()[self.ui.pageInfosSelected.currentIndex()]
+        self.refresh()
 
     def addPage(self):
         name = self.ui.pageNameField.text()
@@ -74,23 +135,79 @@ class App:
         self.graphe.addSommet(Page(name))
         self.refresh()
 
+    # TODO: FIX THIS
     def deletePage(self):
-        pass
+        self.graphe.removeSommet(self.currentPage)
+
+    def setAdminTarget(self):
+        self.adminTarget = self.graphe.getAllUsers()[self.ui.changeAdminBox.currentIndex()]
+        self.refresh()
 
     def addAdmin(self):
-        pass
+        if self.currentPage is None or self.adminTarget is None: return
+        self.graphe.addArc(self.currentPage, self.adminTarget)
+        self.refresh()
 
+    def removeAdmin(self):
+        print("remove Admin")
+        if self.currentPage is None or self.adminTarget is None: return
+        self.graphe.removeArc(self.currentPage, self.adminTarget)
+        self.refresh()
 
-    # TABLE :   | Type | Name       | FirstName | Age
-    # Page:     | Page | Facebook   | ---       | ---
-    # User:     | User | Doe        | Jhon      | 23
-    def showDataInTable(self) -> None:
-        data = [
-            ["User", "Jhon", "Doe", 38],
-            ["Page", "FaceBook"],
-            ["User", "Jhon", "Doe", 38],
-        ]
+    ### UPDATES
 
+    def fillPageInfos(self):
+        self.ui.pageAdminsListWidget.clear()
+        if self.currentPage is None: return
+        self.ui.pageNameInfosField.setText(self.currentPage.name)
+        # fill user follows list
+        for s in self.currentPage.admins:
+            self.ui.pageAdminsListWidget.addItem(f"{s}")
+
+    def updatePageInfosCombocontent(self):
+        self.ui.pageInfosSelected.clear()
+        for p in self.graphe.getAllPages():
+            self.ui.pageInfosSelected.addItem(f"{p.name}")
+        if self.currentPage is not None:
+            self.ui.pageInfosSelected.setCurrentText(f"{self.currentPage.name}")
+
+    def updatePageAdminComboContent(self):
+        self.ui.changeAdminBox.clear()
+        for u in self.graphe.getAllUsers():
+            self.ui.changeAdminBox.addItem(f"{u.name} {u.firstName}")
+        if self.adminTarget is not None:
+            self.ui.changeAdminBox.setCurrentText(f"{self.adminTarget.name} {self.adminTarget.firstName}")
+
+    ## View Panel
+
+    def fillNodesList(self):
+        fltr = self.ui.sommetsListFilter.currentText()
+        self.ui.sommetsView.setRowCount(self.graphe.getNbSommets())
+        if fltr == "Nom":
+            ss = self.graphe.getAllSommetsNameSorted()
+        else:
+            ss = self.graphe.getAllSommetsDegreSorted()
+        i = 0
+        for s in ss:
+            if s.isUser():
+                self.ui.sommetsView.setItem(i, 0, QtWidgets.QTableWidgetItem(s.name))
+                self.ui.sommetsView.setItem(i, 1, QtWidgets.QTableWidgetItem(s.firstName))
+                self.ui.sommetsView.setItem(i, 2, QtWidgets.QTableWidgetItem(f"{s.age}"))
+            else:
+                self.ui.sommetsView.setItem(i, 0, QtWidgets.QTableWidgetItem(s.name))
+                self.ui.sommetsView.setItem(i, 1, QtWidgets.QTableWidgetItem("---"))
+                self.ui.sommetsView.setItem(i, 2, QtWidgets.QTableWidgetItem("---"))
+            i += 1
+
+    def fillArcsList(self):
+        self.ui.arcsView.setRowCount(self.graphe.getNbArcs())
+        i = 0
+        for a in self.graphe.getallArcs():
+            self.ui.arcsView.setItem(i, 0, QtWidgets.QTableWidgetItem(f"{a[0]}"))
+            self.ui.arcsView.setItem(i, 1, QtWidgets.QTableWidgetItem(f"{a[1]}"))
+            i += 1
+
+    ## Setup actions listeners
 
     def setupActions(self) -> None:
         """ add listeners """
@@ -100,10 +217,29 @@ class App:
         self.ui.addUserButton.clicked.connect(self.addUser)
         self.ui.addPageButton.clicked.connect(self.addPage)
         self.ui.showGraphButton.clicked.connect(self.showGraphe)
+        self.ui.userInfoSelectBox.activated.connect(self.setCurrentUser)
+        #self.ui.deleteUserButton.clicked.connect(self.deleteUser)
+        self.ui.pageInfosSelected.activated.connect(self.setCurrentPage)
+        #self.ui.deletePageButton.clicked.connect(self.deletePage)
+        self.ui.sommetsListFilter.activated.connect(self.fillNodesList)
+        self.ui.changeFollowComboBox.activated.connect(self.setFollowTarget)
+        self.ui.followButton.clicked.connect(self.follow)
+        self.ui.unfollowButton.clicked.connect(self.unfollow)
+        self.ui.changeAdminBox.activated.connect(self.setAdminTarget)
+        self.ui.addAdminButton.clicked.connect(self.addAdmin)
+        self.ui.removeAdminButton.clicked.connect(self.removeAdmin)
 
     def refresh(self):
         self.ui.nbSommetsField.setText(f"{self.graphe.getNbSommets()}")
         self.ui.nbArcField.setText(f"{self.graphe.getNbArcs()}")
+        self.fillUserInfos()
+        self.updateUserInfosCombocontent()
+        self.updateUserFollowComboContent()
+        self.fillPageInfos()
+        self.updatePageInfosCombocontent()
+        self.updatePageAdminComboContent()
+        self.fillNodesList()
+        self.fillArcsList()
 
     # OUTILS
 
@@ -111,10 +247,9 @@ class App:
         QtWidgets.QMessageBox.warning(self.mainWindow, "Error!", f"Error: {msg}")
 
 
-""" Entry point """
 if __name__ == "__main__":
+    """ Entry point """
     import sys
-    # sys.argv >> 0: executable, arg1, arg2 ...
     app = App(sys.argv)
     app.setup()
     app.show()

@@ -41,6 +41,18 @@ class Graphe:
         """
         return sorted(self.sommets.values(), key=lambda e: e.getDegreOut())
 
+    def getAllUsers(self):
+        """
+        Renvoie la liste de tous les utilisateurs
+        """
+        return [s for s in self.sommets if s.isUser()]
+
+    def getAllPages(self):
+        """
+        Renvoie la liste de tous les pages
+        """
+        return [s for s in self.sommets if not s.isUser()]
+
     def getallArcs(self):
         """
         Renvoie la liste des arcs du graphe
@@ -133,15 +145,23 @@ class Graphe:
             self.sommets[s] = s
             self.arcs[s] = []
 
+    # TODO: FIX THIS
     def removeSommet(self, s):
         """
         Retire un sommet du graphe s'il existe
         """
         if s in self.sommets:
-            s = self.sommets.pop(s)
-            sArcs = self.arcs.pop(s)
-            for a in sArcs:
-                s.unlink(a)
+            s = self.sommets[s]
+            for a in s.follows:
+                c = self.sommets[a]
+                c.followers.remove(s)
+                self.sommets[a] = c
+            for f in s.followers:
+                c = self.sommets[f]
+                c.follows.remove(s)
+                self.sommets[f] = c
+            self.sommets.pop(s)
+            self.arcs.pop(s)
 
     def addArc(self, src, dest):
         """
@@ -161,19 +181,12 @@ class Graphe:
         """
         Retire l'arc entre src et dest du graphe s'il existe
         """
-        if src in self.sommets and dest in self.sommets and dest in self.arcs[src]:
+        if src in self.sommets and dest in self.sommets or src.isUser() and dest in self.arcs[src]:
             src = self.sommets.pop(src)
             sArcs = self.arcs.pop(src)
             dest = self.sommets.pop(dest)
             src.unlink(dest)
-            sArcs.remove(dest)
+            if src.isUser(): sArcs.remove(dest)
             self.arcs[src] = sArcs
             self.sommets[src] = src
             self.sommets[dest] = dest
-
-    # OUTILS
-
-if __name__ == "__main__":
-    from dataLoader import DataLoader
-    g = DataLoader.load("../data_sets/sample1.csv")
-    g.show()
