@@ -145,7 +145,6 @@ class Graphe:
             self.sommets[s] = s
             self.arcs[s] = []
 
-    # TODO: FIX THIS
     def removeSommet(self, s):
         """
         Retire un sommet du graphe s'il existe
