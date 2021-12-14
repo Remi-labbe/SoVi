@@ -151,15 +151,10 @@ class Graphe:
         Retire un sommet du graphe s'il existe
         """
         if s in self.sommets:
-            s = self.sommets[s]
-            for a in s.follows:
-                c = self.sommets[a]
-                c.followers.remove(s)
-                self.sommets[a] = c
-            for f in s.followers:
-                c = self.sommets[f]
-                c.follows.remove(s)
-                self.sommets[f] = c
+            for a in [f for f in self.sommets[s].follows]:
+                self.removeArc(s, self.sommets[a])
+            for f in [f for f in self.sommets[s].followers]:
+                self.removeArc(self.sommets[f], s)
             self.sommets.pop(s)
             self.arcs.pop(s)
 

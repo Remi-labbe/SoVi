@@ -71,7 +71,6 @@ class App:
         self.graphe.addSommet(Utilisateur(name, firstName, age))
         self.refresh()
 
-    # TODO: FIX THIS
     def deleteUser(self):
         self.graphe.removeSommet(self.currentUser)
         self.currentUser = self.graphe.getAllUsers()[0]
@@ -135,7 +134,6 @@ class App:
         self.graphe.addSommet(Page(name))
         self.refresh()
 
-    # TODO: FIX THIS
     def deletePage(self):
         self.graphe.removeSommet(self.currentPage)
 
@@ -218,9 +216,9 @@ class App:
         self.ui.addPageButton.clicked.connect(self.addPage)
         self.ui.showGraphButton.clicked.connect(self.showGraphe)
         self.ui.userInfoSelectBox.activated.connect(self.setCurrentUser)
-        #self.ui.deleteUserButton.clicked.connect(self.deleteUser)
+        self.ui.deleteUserButton.clicked.connect(self.deleteUser)
         self.ui.pageInfosSelected.activated.connect(self.setCurrentPage)
-        #self.ui.deletePageButton.clicked.connect(self.deletePage)
+        self.ui.deletePageButton.clicked.connect(self.deletePage)
         self.ui.sommetsListFilter.activated.connect(self.fillNodesList)
         self.ui.changeFollowComboBox.activated.connect(self.setFollowTarget)
         self.ui.followButton.clicked.connect(self.follow)
