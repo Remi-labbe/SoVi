@@ -136,6 +136,8 @@ class App:
 
     def deletePage(self):
         self.graphe.removeSommet(self.currentPage)
+        self.currentPage = self.graphe.getAllPages()[0]
+        self.refresh()
 
     def setAdminTarget(self):
         self.adminTarget = self.graphe.getAllUsers()[self.ui.changeAdminBox.currentIndex()]
